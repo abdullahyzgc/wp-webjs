@@ -1,0 +1,549 @@
+{
+	"info": {
+		"_postman_id": "whatsapp-multi-api-collection-v3",
+		"name": "WhatsApp Multi-Instance API v3",
+		"description": "Profesyonel WhatsApp API sistemi - Profil yönetimi özellikleri ile güncellenmiş versiyon.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "instanceId",
+			"value": "test-instance",
+			"type": "string"
+		},
+		{
+			"key": "chatId",
+			"value": "905551234567@c.us",
+			"type": "string"
+		},
+		{
+			"key": "contactId",
+			"value": "905551234567@c.us",
+			"type": "string"
+		},
+		{
+			"key": "groupId",
+			"value": "120363123456789012@g.us",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "System",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Instance Management",
+			"item": [
+				{
+					"name": "Get All Instances",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Instance",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"instanceId\": \"{{instanceId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Instance Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Initialize Instance",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/initialize",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "initialize"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reconnect Instance",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/reconnect",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "reconnect"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Instance",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Messaging",
+			"item": [
+				{
+					"name": "Send Text Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"to\": \"905551234567\",\n  \"message\": \"Merhaba! Bu bir test mesajıdır.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/send-message",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "send-message"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Media",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "media",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "to",
+									"value": "905551234567",
+									"type": "text"
+								},
+								{
+									"key": "caption",
+									"value": "Test medya dosyası",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/send-media",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "send-media"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chat Management",
+			"item": [
+				{
+					"name": "Get All Chats (First 10 - Fast)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/chats?includeProfilePics=true&limit=10&offset=0",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "chats"],
+							"query": [
+								{
+									"key": "includeProfilePics",
+									"value": "true"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Chats (Next 10 - Pagination)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/chats?includeProfilePics=true&limit=10&offset=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "chats"],
+							"query": [
+								{
+									"key": "includeProfilePics",
+									"value": "true"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Chats (with Profile Pics - Default 50)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/chats?includeProfilePics=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "chats"],
+							"query": [
+								{
+									"key": "includeProfilePics",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Chats (without Profile Pics)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/chats?includeProfilePics=false",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "chats"],
+							"query": [
+								{
+									"key": "includeProfilePics",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Contacts Only (First 10 - Fast)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/contacts?includeProfilePics=true&limit=10&offset=0",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "contacts"],
+							"query": [
+								{
+									"key": "includeProfilePics",
+									"value": "true"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Contacts Only (with Profile Pics - Default 50)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/contacts?includeProfilePics=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "contacts"],
+							"query": [
+								{
+									"key": "includeProfilePics",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Contacts Only (Fast - no Profile Pics)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/contacts?includeProfilePics=false",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "contacts"],
+							"query": [
+								{
+									"key": "includeProfilePics",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Groups Only (with Profile Pics)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/groups?includeProfilePics=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "groups"],
+							"query": [
+								{
+									"key": "includeProfilePics",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Groups Only (Fast - no Profile Pics)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/groups?includeProfilePics=false",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "groups"],
+							"query": [
+								{
+									"key": "includeProfilePics",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Chat Messages",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"chatId\": \"{{chatId}}\",\n  \"limit\": 50\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/chat-messages",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "chat-messages"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Profile Management",
+			"item": [
+				{
+					"name": "Get Contact Profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contactId\": \"{{contactId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/contact-profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "contact-profile"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Multiple Contact Profiles",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contactIds\": [\n    \"905551234567@c.us\",\n    \"905559876543@c.us\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/multiple-contact-profiles",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "multiple-contact-profiles"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Group Info",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"groupId\": \"{{groupId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/group-info",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "group-info"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Contact About",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contactId\": \"{{contactId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/contact-about",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "contact-about"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Utilities",
+			"item": [
+				{
+					"name": "Check Number",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"number\": \"905551234567\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/whatsapp/instances/{{instanceId}}/check-number",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "whatsapp", "instances", "{{instanceId}}", "check-number"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

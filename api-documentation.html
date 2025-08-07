@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Multi-Instance API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .nav {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav h3 {
+            margin-bottom: 15px;
+            color: #25D366;
+        }
+        
+        .nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .nav a {
+            color: #128C7E;
+            text-decoration: none;
+            padding: 8px 15px;
+            border: 1px solid #25D366;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .nav a:hover {
+            background: #25D366;
+            color: white;
+        }
+        
+        .section {
+            background: white;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            background: #25D366;
+            color: white;
+            padding: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .section-content {
+            padding: 30px;
+        }
+        
+        .endpoint {
+            margin-bottom: 40px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .endpoint-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+        
+        .method.get { background: #28a745; color: white; }
+        .method.post { background: #007bff; color: white; }
+        .method.delete { background: #dc3545; color: white; }
+        .method.put { background: #ffc107; color: black; }
+        
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #495057;
+        }
+        
+        .endpoint-body {
+            padding: 20px;
+        }
+        
+        .description {
+            margin-bottom: 20px;
+            color: #6c757d;
+        }
+        
+        .params-section {
+            margin-bottom: 25px;
+        }
+        
+        .params-section h4 {
+            color: #25D366;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        .param-table th,
+        .param-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .param-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .param-required {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .param-optional {
+            color: #28a745;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .code-header {
+            background: #495057;
+            color: white;
+            padding: 8px 15px;
+            margin: -15px -15px 15px -15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .response-example {
+            margin-top: 20px;
+        }
+        
+        .status-code {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+        
+        .status-200 { background: #d4edda; color: #155724; }
+        .status-400 { background: #f8d7da; color: #721c24; }
+        .status-404 { background: #f8d7da; color: #721c24; }
+        .status-500 { background: #f8d7da; color: #721c24; }
+        
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .info-box.warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+        
+        .info-box.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+            margin-top: 50px;
+        }
+        
+        @media (max-width: 768px) {
+            .nav ul {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 WhatsApp Multi-Instance API</h1>
+            <p>Kapsamlı API Dokümantasyonu v3.0</p>
+            <p>Auto-Reconnection & Batch Processing ile Enterprise Ready</p>
+        </div>
+
+        <div class="nav">
+            <h3>📋 Hızlı Navigasyon</h3>
+            <ul>
+                <li><a href="#overview">Genel Bakış</a></li>
+                <li><a href="#authentication">Kimlik Doğrulama</a></li>
+                <li><a href="#instances">Instance Yönetimi</a></li>
+                <li><a href="#chats">Chat Yönetimi</a></li>
+                <li><a href="#messages">Mesaj Gönderme</a></li>
+                <li><a href="#media">Medya Gönderme</a></li>
+                <li><a href="#contacts">Kişi Yönetimi</a></li>
+                <li><a href="#errors">Hata Kodları</a></li>
+            </ul>
+        </div>
+
+        <div class="section" id="overview">
+            <div class="section-header">🌟 Genel Bakış</div>
+            <div class="section-content">
+                <h3>API Özellikleri</h3>
+                <ul style="margin: 20px 0; padding-left: 20px;">
+                    <li>✅ <strong>Multi-Instance Support</strong> - Birden fazla WhatsApp hesabı</li>
+                    <li>✅ <strong>Auto-Reconnection</strong> - Otomatik yeniden bağlanma</li>
+                    <li>✅ <strong>Batch Processing</strong> - Profil resmi optimizasyonu</li>
+                    <li>✅ <strong>Pagination</strong> - Büyük listeleri verimli yönetim</li>
+                    <li>✅ <strong>Real-time WebSocket</strong> - Anlık bildirimler</li>
+                    <li>✅ <strong>Session Recovery</strong> - Otomatik session kurtarma</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong>🔗 Base URL:</strong> <code>http://localhost:3001/api/whatsapp</code>
+                </div>
+
+                <div class="info-box success">
+                    <strong>📊 Performans:</strong><br>
+                    • 5 chat + profil resmi: ~500ms<br>
+                    • 10 chat + profil resmi: ~1000ms<br>
+                    • 50 chat (profil resmi olmadan): ~200ms
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="instances">
+            <div class="section-header">🔧 Instance Yönetimi</div>
+            <div class="section-content">
+
+                <!-- Get All Instances -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/whatsapp/instances</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Tüm WhatsApp instance'larını listeler</div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "count": 2,
+  "instances": [
+    {
+      "instanceId": "test-instance",
+      "status": "ready",
+      "hasValidAuth": true,
+      "info": {
+        "pushname": "Softlab İnternet Hizmetleri",
+        "wid": {
+          "user": "908503026235"
+        }
+      },
+      "lastActivity": "2025-08-07T11:58:51.000Z"
+    },
+    {
+      "instanceId": "business-instance",
+      "status": "disconnected",
+      "hasValidAuth": false,
+      "qr": null
+    }
+  ]
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Instance -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/whatsapp/instances</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Yeni WhatsApp instance oluşturur</div>
+
+                        <div class="params-section">
+                            <h4>📥 Request Body</h4>
+                            <table class="param-table">
+                                <tr>
+                                    <th>Parametre</th>
+                                    <th>Tip</th>
+                                    <th>Zorunlu</th>
+                                    <th>Açıklama</th>
+                                </tr>
+                                <tr>
+                                    <td>instanceId</td>
+                                    <td>string</td>
+                                    <td><span class="param-required">Evet</span></td>
+                                    <td>Benzersiz instance kimliği</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="code-block">
+                            <div class="code-header">Request Example</div>
+                            <pre>{
+  "instanceId": "my-business-account"
+}</pre>
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">201 Created</div>
+                                <pre>{
+  "success": true,
+  "message": "Instance created successfully",
+  "instanceId": "my-business-account",
+  "status": "created"
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Get Instance Status -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/whatsapp/instances/{instanceId}</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Belirli bir instance'ın durumunu getirir</div>
+
+                        <div class="params-section">
+                            <h4>🔗 Path Parameters</h4>
+                            <table class="param-table">
+                                <tr>
+                                    <th>Parametre</th>
+                                    <th>Tip</th>
+                                    <th>Açıklama</th>
+                                </tr>
+                                <tr>
+                                    <td>instanceId</td>
+                                    <td>string</td>
+                                    <td>Instance kimliği</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "instance": {
+    "instanceId": "test-instance",
+    "status": "ready",
+    "hasValidAuth": true,
+    "reconnectAttempts": 0,
+    "info": {
+      "pushname": "Softlab İnternet Hizmetleri",
+      "wid": {
+        "user": "908503026235"
+      }
+    },
+    "lastActivity": "2025-08-07T11:58:51.000Z"
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Initialize Instance -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/whatsapp/instances/{instanceId}/initialize</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Instance'ı başlatır ve WhatsApp bağlantısını kurar</div>
+
+                        <div class="info-box">
+                            <strong>💡 Not:</strong> Bu endpoint QR kod oluşturur veya mevcut session ile otomatik bağlanır.
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "instanceId": "test-instance",
+  "status": "initializing",
+  "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
+  "message": "Instance initialization started"
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reconnect Instance -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/whatsapp/instances/{instanceId}/reconnect</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Disconnected instance'ı manuel olarak yeniden bağlar</div>
+
+                        <div class="info-box warning">
+                            <strong>⚠️ Uyarı:</strong> Bu endpoint sadece disconnected durumundaki instance'lar için kullanılabilir.
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "message": "Reconnection attempt started",
+  "instanceId": "test-instance",
+  "status": "reconnecting"
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Instance -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/api/whatsapp/instances/{instanceId}</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Instance'ı siler ve tüm session verilerini temizler</div>
+
+                        <div class="info-box warning">
+                            <strong>⚠️ Dikkat:</strong> Bu işlem geri alınamaz. Tüm session verileri silinir.
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "message": "Instance destroyed successfully",
+  "instanceId": "test-instance"
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="section" id="chats">
+            <div class="section-header">💬 Chat Yönetimi</div>
+            <div class="section-content">
+
+                <!-- Get All Chats -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/whatsapp/instances/{instanceId}/chats</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Tüm chat'leri (kişiler ve gruplar) getirir. Pagination ve profil resmi desteği ile.</div>
+
+                        <div class="params-section">
+                            <h4>🔗 Path Parameters</h4>
+                            <table class="param-table">
+                                <tr>
+                                    <th>Parametre</th>
+                                    <th>Tip</th>
+                                    <th>Açıklama</th>
+                                </tr>
+                                <tr>
+                                    <td>instanceId</td>
+                                    <td>string</td>
+                                    <td>Instance kimliği</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="params-section">
+                            <h4>❓ Query Parameters</h4>
+                            <table class="param-table">
+                                <tr>
+                                    <th>Parametre</th>
+                                    <th>Tip</th>
+                                    <th>Varsayılan</th>
+                                    <th>Açıklama</th>
+                                </tr>
+                                <tr>
+                                    <td>includeProfilePics</td>
+                                    <td>boolean</td>
+                                    <td>true</td>
+                                    <td>Profil resimlerini dahil et</td>
+                                </tr>
+                                <tr>
+                                    <td>limit</td>
+                                    <td>number</td>
+                                    <td>50</td>
+                                    <td>Maksimum chat sayısı (max: 200)</td>
+                                </tr>
+                                <tr>
+                                    <td>offset</td>
+                                    <td>number</td>
+                                    <td>0</td>
+                                    <td>Sayfalama için başlangıç noktası</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="info-box success">
+                            <strong>⚡ Performans İpuçları:</strong><br>
+                            • <code>limit=5&includeProfilePics=true</code> → ~500ms (çok hızlı)<br>
+                            • <code>limit=10&includeProfilePics=true</code> → ~1000ms (hızlı)<br>
+                            • <code>limit=50&includeProfilePics=false</code> → ~200ms (ultra hızlı)
+                        </div>
+
+                        <div class="code-block">
+                            <div class="code-header">Request Examples</div>
+                            <pre># Hızlı liste (mobil için ideal)
+GET /api/whatsapp/instances/test-instance/chats?limit=5&includeProfilePics=true
+
+# Ultra hızlı liste (profil resmi olmadan)
+GET /api/whatsapp/instances/test-instance/chats?limit=50&includeProfilePics=false
+
+# Pagination - sonraki sayfa
+GET /api/whatsapp/instances/test-instance/chats?limit=10&offset=10</pre>
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "instanceId": "test-instance",
+  "contacts": [
+    {
+      "id": "905324214880@c.us",
+      "name": "Abdullah Yüzgeç",
+      "isGroup": false,
+      "isReadOnly": false,
+      "unreadCount": 0,
+      "timestamp": 1754550823,
+      "profilePicUrl": "https://pps.whatsapp.net/v/t61.24694-24/...",
+      "lastMessage": {
+        "id": "true_905324214880@c.us_3EB01376A4C721476C1237",
+        "body": "Merhaba! Bu bir test mesajıdır.",
+        "type": "chat",
+        "timestamp": 1754550823,
+        "fromMe": true
+      }
+    }
+  ],
+  "groups": [
+    {
+      "id": "120363025246234567@g.us",
+      "name": "Proje Ekibi",
+      "isGroup": true,
+      "unreadCount": 3,
+      "timestamp": 1754550900,
+      "profilePicUrl": "https://pps.whatsapp.net/v/t61.24694-24/...",
+      "lastMessage": {
+        "id": "false_120363025246234567@g.us_3EB01376A4C721476C1238",
+        "body": "Toplantı yarın saat 14:00'da",
+        "type": "chat",
+        "timestamp": 1754550900,
+        "fromMe": false
+      }
+    }
+  ],
+  "totalChats": 901,
+  "contactsCount": 1,
+  "groupsCount": 1,
+  "profilePicsIncluded": true,
+  "pagination": {
+    "limit": 5,
+    "offset": 0,
+    "hasMore": true,
+    "nextOffset": 5,
+    "currentPage": 1,
+    "totalPages": 181,
+    "returnedCount": 2
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Get Contacts Only -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/whatsapp/instances/{instanceId}/contacts</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Sadece kişileri getirir (gruplar hariç)</div>
+
+                        <div class="params-section">
+                            <h4>❓ Query Parameters</h4>
+                            <table class="param-table">
+                                <tr>
+                                    <th>Parametre</th>
+                                    <th>Tip</th>
+                                    <th>Varsayılan</th>
+                                    <th>Açıklama</th>
+                                </tr>
+                                <tr>
+                                    <td>includeProfilePics</td>
+                                    <td>boolean</td>
+                                    <td>true</td>
+                                    <td>Profil resimlerini dahil et</td>
+                                </tr>
+                                <tr>
+                                    <td>limit</td>
+                                    <td>number</td>
+                                    <td>50</td>
+                                    <td>Maksimum kişi sayısı</td>
+                                </tr>
+                                <tr>
+                                    <td>offset</td>
+                                    <td>number</td>
+                                    <td>0</td>
+                                    <td>Sayfalama için başlangıç noktası</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "instanceId": "test-instance",
+  "contacts": [...],
+  "totalContacts": 850,
+  "profilePicsIncluded": true,
+  "pagination": {
+    "limit": 50,
+    "offset": 0,
+    "hasMore": true,
+    "nextOffset": 50,
+    "currentPage": 1,
+    "totalPages": 17,
+    "returnedCount": 50
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Get Groups Only -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/whatsapp/instances/{instanceId}/groups</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Sadece grupları getirir (kişiler hariç)</div>
+
+                        <div class="params-section">
+                            <h4>❓ Query Parameters</h4>
+                            <table class="param-table">
+                                <tr>
+                                    <th>Parametre</th>
+                                    <th>Tip</th>
+                                    <th>Varsayılan</th>
+                                    <th>Açıklama</th>
+                                </tr>
+                                <tr>
+                                    <td>includeProfilePics</td>
+                                    <td>boolean</td>
+                                    <td>true</td>
+                                    <td>Grup resimlerini dahil et</td>
+                                </tr>
+                                <tr>
+                                    <td>limit</td>
+                                    <td>number</td>
+                                    <td>50</td>
+                                    <td>Maksimum grup sayısı</td>
+                                </tr>
+                                <tr>
+                                    <td>offset</td>
+                                    <td>number</td>
+                                    <td>0</td>
+                                    <td>Sayfalama için başlangıç noktası</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "instanceId": "test-instance",
+  "groups": [...],
+  "totalGroups": 51,
+  "profilePicsIncluded": true,
+  "pagination": {
+    "limit": 50,
+    "offset": 0,
+    "hasMore": true,
+    "nextOffset": 50,
+    "currentPage": 1,
+    "totalPages": 2,
+    "returnedCount": 50
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="section" id="messages">
+            <div class="section-header">📨 Mesaj Gönderme</div>
+            <div class="section-content">
+
+                <!-- Send Text Message -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/whatsapp/instances/{instanceId}/send-message</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Metin mesajı gönderir</div>
+
+                        <div class="params-section">
+                            <h4>📥 Request Body</h4>
+                            <table class="param-table">
+                                <tr>
+                                    <th>Parametre</th>
+                                    <th>Tip</th>
+                                    <th>Zorunlu</th>
+                                    <th>Açıklama</th>
+                                </tr>
+                                <tr>
+                                    <td>to</td>
+                                    <td>string</td>
+                                    <td><span class="param-required">Evet</span></td>
+                                    <td>Alıcı telefon numarası (905551234567@c.us formatında)</td>
+                                </tr>
+                                <tr>
+                                    <td>message</td>
+                                    <td>string</td>
+                                    <td><span class="param-required">Evet</span></td>
+                                    <td>Gönderilecek mesaj metni</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="code-block">
+                            <div class="code-header">Request Example</div>
+                            <pre>{
+  "to": "905551234567@c.us",
+  "message": "Merhaba! Bu bir test mesajıdır."
+}</pre>
+                        </div>
+
+                        <div class="info-box">
+                            <strong>📱 Telefon Numarası Formatı:</strong><br>
+                            • Türkiye: <code>905551234567@c.us</code><br>
+                            • ABD: <code>15551234567@c.us</code><br>
+                            • Grup: <code>120363025246234567@g.us</code>
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "instanceId": "test-instance",
+  "to": "905551234567@c.us",
+  "message": "Merhaba! Bu bir test mesajıdır.",
+  "messageId": "true_905551234567@c.us_3EB01376A4C721476C1239",
+  "timestamp": 1754550950
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Get Chat Messages -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/whatsapp/instances/{instanceId}/chats/{chatId}/messages</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Belirli bir chat'in mesaj geçmişini getirir</div>
+
+                        <div class="params-section">
+                            <h4>🔗 Path Parameters</h4>
+                            <table class="param-table">
+                                <tr>
+                                    <th>Parametre</th>
+                                    <th>Tip</th>
+                                    <th>Açıklama</th>
+                                </tr>
+                                <tr>
+                                    <td>instanceId</td>
+                                    <td>string</td>
+                                    <td>Instance kimliği</td>
+                                </tr>
+                                <tr>
+                                    <td>chatId</td>
+                                    <td>string</td>
+                                    <td>Chat kimliği (905551234567@c.us formatında)</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="params-section">
+                            <h4>❓ Query Parameters</h4>
+                            <table class="param-table">
+                                <tr>
+                                    <th>Parametre</th>
+                                    <th>Tip</th>
+                                    <th>Varsayılan</th>
+                                    <th>Açıklama</th>
+                                </tr>
+                                <tr>
+                                    <td>limit</td>
+                                    <td>number</td>
+                                    <td>50</td>
+                                    <td>Maksimum mesaj sayısı</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "instanceId": "test-instance",
+  "chatId": "905551234567@c.us",
+  "messages": [
+    {
+      "id": "true_905551234567@c.us_3EB01376A4C721476C1239",
+      "body": "Merhaba! Bu bir test mesajıdır.",
+      "type": "chat",
+      "timestamp": 1754550950,
+      "fromMe": true,
+      "from": "908503026235@c.us",
+      "to": "905551234567@c.us"
+    },
+    {
+      "id": "false_905551234567@c.us_3EB01376A4C721476C1240",
+      "body": "Merhaba! Teşekkürler.",
+      "type": "chat",
+      "timestamp": 1754550960,
+      "fromMe": false,
+      "from": "905551234567@c.us",
+      "to": "908503026235@c.us"
+    }
+  ],
+  "messageCount": 2,
+  "limit": 50
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="section" id="media">
+            <div class="section-header">🖼️ Medya Gönderme</div>
+            <div class="section-content">
+
+                <!-- Send Media -->
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/whatsapp/instances/{instanceId}/send-media</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Resim, video, ses veya doküman gönderir</div>
+
+                        <div class="params-section">
+                            <h4>📥 Form Data</h4>
+                            <table class="param-table">
+                                <tr>
+                                    <th>Parametre</th>
+                                    <th>Tip</th>
+                                    <th>Zorunlu</th>
+                                    <th>Açıklama</th>
+                                </tr>
+                                <tr>
+                                    <td>to</td>
+                                    <td>string</td>
+                                    <td><span class="param-required">Evet</span></td>
+                                    <td>Alıcı telefon numarası</td>
+                                </tr>
+                                <tr>
+                                    <td>media</td>
+                                    <td>file</td>
+                                    <td><span class="param-required">Evet</span></td>
+                                    <td>Gönderilecek medya dosyası</td>
+                                </tr>
+                                <tr>
+                                    <td>caption</td>
+                                    <td>string</td>
+                                    <td><span class="param-optional">Hayır</span></td>
+                                    <td>Medya açıklaması</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="info-box">
+                            <strong>📁 Desteklenen Dosya Türleri:</strong><br>
+                            • <strong>Resim:</strong> JPG, PNG, GIF, WEBP<br>
+                            • <strong>Video:</strong> MP4, AVI, MOV, WEBM<br>
+                            • <strong>Ses:</strong> MP3, WAV, OGG, AAC<br>
+                            • <strong>Doküman:</strong> PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX
+                        </div>
+
+                        <div class="code-block">
+                            <div class="code-header">cURL Example</div>
+                            <pre>curl -X POST \
+  http://localhost:3001/api/whatsapp/instances/test-instance/send-media \
+  -F "to=905551234567@c.us" \
+  -F "media=@/path/to/image.jpg" \
+  -F "caption=Bu bir test resmidir"</pre>
+                        </div>
+
+                        <div class="response-example">
+                            <h4>📤 Response</h4>
+                            <div class="code-block">
+                                <div class="code-header">200 OK</div>
+                                <pre>{
+  "success": true,
+  "instanceId": "test-instance",
+  "to": "905551234567@c.us",
+  "fileName": "image.jpg",
+  "messageId": "true_905551234567@c.us_3EB01376A4C721476C1241",
+  "timestamp": 1754551000,
+  "mediaType": "image"
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="section" id="errors">
+            <div class="section-header">⚠️ Hata Kodları</div>
+            <div class="section-content">
+
+                <h3>HTTP Status Kodları</h3>
+                <table class="param-table" style="margin-bottom: 30px;">
+                    <tr>
+                        <th>Kod</th>
+                        <th>Açıklama</th>
+                        <th>Örnek Durum</th>
+                    </tr>
+                    <tr>
+                        <td><span class="status-code status-200">200</span></td>
+                        <td>Başarılı</td>
+                        <td>İstek başarıyla tamamlandı</td>
+                    </tr>
+                    <tr>
+                        <td><span class="status-code status-400">400</span></td>
+                        <td>Hatalı İstek</td>
+                        <td>Geçersiz parametre veya instance hazır değil</td>
+                    </tr>
+                    <tr>
+                        <td><span class="status-code status-404">404</span></td>
+                        <td>Bulunamadı</td>
+                        <td>Instance veya chat bulunamadı</td>
+                    </tr>
+                    <tr>
+                        <td><span class="status-code status-408">408</span></td>
+                        <td>Timeout</td>
+                        <td>İstek zaman aşımına uğradı</td>
+                    </tr>
+                    <tr>
+                        <td><span class="status-code status-500">500</span></td>
+                        <td>Sunucu Hatası</td>
+                        <td>Beklenmeyen sunucu hatası</td>
+                    </tr>
+                </table>
+
+                <h3>Yaygın Hata Mesajları</h3>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="status-code status-400">400</span>
+                        Instance Not Ready
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="code-block">
+                            <pre>{
+  "success": false,
+  "error": "Instance is not ready. Current status: disconnected"
+}</pre>
+                        </div>
+                        <div class="description">
+                            <strong>Çözüm:</strong> Instance'ı initialize edin veya reconnect endpoint'ini kullanın.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="status-code status-408">408</span>
+                        Request Timeout
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="code-block">
+                            <pre>{
+  "success": false,
+  "error": "Request timeout. Try with a smaller limit or without profile pictures.",
+  "suggestion": "Try: /chats?limit=10&includeProfilePics=false"
+}</pre>
+                        </div>
+                        <div class="description">
+                            <strong>Çözüm:</strong> Daha küçük limit kullanın veya profil resimlerini devre dışı bırakın.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="status-code status-404">404</span>
+                        Instance Not Found
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="code-block">
+                            <pre>{
+  "success": false,
+  "error": "Instance not found"
+}</pre>
+                        </div>
+                        <div class="description">
+                            <strong>Çözüm:</strong> Geçerli bir instance ID kullanın veya yeni instance oluşturun.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box success">
+                    <strong>🔧 Troubleshooting İpuçları:</strong><br>
+                    • Instance status'unu kontrol edin: <code>GET /instances/{id}</code><br>
+                    • Auto-reconnection 60 saniye içinde çalışır<br>
+                    • Profil resmi timeout'u için küçük batch'ler kullanın<br>
+                    • WebSocket bağlantısı ile real-time status takibi yapın
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🚀 <strong>WhatsApp Multi-Instance API v3.0</strong></p>
+            <p>Auto-Reconnection & Batch Processing ile Enterprise Ready</p>
+            <p>📧 Destek: <a href="mailto:support@example.com">support@example.com</a></p>
+            <p>📚 GitHub: <a href="https://github.com/example/whatsapp-api">github.com/example/whatsapp-api</a></p>
+        </div>
+
+    </div>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('.nav a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Copy code blocks on click
+        document.querySelectorAll('.code-block pre').forEach(block => {
+            block.style.cursor = 'pointer';
+            block.title = 'Kopyalamak için tıklayın';
+
+            block.addEventListener('click', function() {
+                const text = this.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    // Show copied feedback
+                    const originalBg = this.style.backgroundColor;
+                    this.style.backgroundColor = '#d4edda';
+                    setTimeout(() => {
+                        this.style.backgroundColor = originalBg;
+                    }, 500);
+                });
+            });
+        });
+
+        // Highlight current section in navigation
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.section');
+            const navLinks = document.querySelectorAll('.nav a');
+
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= (sectionTop - 200)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .nav a.active {
+            background: #25D366;
+            color: white;
+        }
+
+        .code-block pre:hover {
+            background: #e9ecef;
+        }
+    </style>
+
+</body>
+</html>
