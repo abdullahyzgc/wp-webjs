@@ -14,8 +14,8 @@ class WhatsAppManager {
         this.reconnectionInterval = null;
         this.profilePicCache = new Map(); // Cache for profile pictures
         this.cacheExpiry = 30 * 60 * 1000; // 30 minutes cache
-        this.maxReconnectAttempts = 5;
-        this.reconnectDelay = 30000; // 30 seconds
+        this.maxReconnectAttempts = 8; // Daha fazla deneme
+        this.reconnectDelay = 5000; // 5 saniye (çok daha hızlı)
 
         // Create sessions directory if it doesn't exist
         if (!fs.existsSync(this.sessionsPath)) {
@@ -191,7 +191,16 @@ class WhatsAppManager {
                         '--no-first-run',
                         '--no-zygote',
                         '--single-process',
-                        '--disable-gpu'
+                        '--disable-gpu',
+                        '--disable-web-security',
+                        '--disable-background-networking',
+                        '--disable-background-timer-throttling',
+                        '--disable-renderer-backgrounding',
+                        '--disable-backgrounding-occluded-windows',
+                        '--disable-ipc-flooding-protection',
+                        '--run-all-compositor-stages-before-draw',
+                        '--disable-extensions',
+                        '--aggressive-cache-discard'
                     ]
                 }
             });
@@ -206,7 +215,8 @@ class WhatsAppManager {
                 lastActivity: new Date(),
                 isRecovered: true,
                 hasValidAuth: hasValidAuth,
-                skipQR: hasValidAuth // QR kodunu atla flag'i
+                skipQR: hasValidAuth, // QR kodunu atla flag'i (başlangıçta dosya kontrolüne göre)
+                authenticationAttempted: false // Authentication denenip denenmediğini takip et
             };
 
             this.instances.set(instanceId, instanceData);
@@ -265,7 +275,16 @@ class WhatsAppManager {
                         '--no-first-run',
                         '--no-zygote',
                         '--single-process',
-                        '--disable-gpu'
+                        '--disable-gpu',
+                        '--disable-web-security',
+                        '--disable-background-networking',
+                        '--disable-background-timer-throttling',
+                        '--disable-renderer-backgrounding',
+                        '--disable-backgrounding-occluded-windows',
+                        '--disable-ipc-flooding-protection',
+                        '--run-all-compositor-stages-before-draw',
+                        '--disable-extensions',
+                        '--aggressive-cache-discard'
                     ]
                 }
             });
@@ -314,57 +333,132 @@ class WhatsAppManager {
 
         client.on('qr', async (qr) => {
             try {
-                // Authenticated session'lar için QR kod oluşturma
+                // QR event tetiklenmişse client authenticated değil demektir
+                // Hızlı kontrol: sadece skipQR flag'i varsa ve bu ilk QR değilse kontrol et
                 if (instance.skipQR && instance.hasValidAuth) {
-                    console.log(`\n🚫 Instance ${instanceId} authenticated session - QR kod atlandı`);
-                    console.log('⏳ Otomatik bağlantı bekleniyor...\n');
-                    logger.info(`QR code skipped for authenticated instance ${instanceId}`);
-                    return; // QR kod oluşturma
+                    console.log(`\n⚠️ Instance ${instanceId} için beklenmeyen QR kod eventi!`);
+                    console.log('📂 Session dosyaları mevcut ama client bağlı değil');
+                    console.log('🔄 Session geçersiz, QR kod gösteriliyor...\n');
+                    
+                    // skipQR flag'ini iptal et çünkü gerçekte authentication gerekli
+                    instance.skipQR = false;
+                    instance.hasValidAuth = false;
+                    instance.status = 'qr_required';
+                    
+                    logger.warn(`QR event triggered for supposedly authenticated instance ${instanceId} - session invalid`);
                 }
 
-                const qrDataURL = await qrcode.toDataURL(qr);
-                instance.qr = qrDataURL;
+                // QR kod işlemlerini paralel başlat - optimize edilmiş ayarlarla
+                const qrDataURLPromise = qrcode.toDataURL(qr, {
+                    width: 256,  // Küçük boyut = hızlı oluşturma
+                    margin: 1,   // Minimum margin
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    },
+                    errorCorrectionLevel: 'L'  // Düşük hata düzeltme = hızlı oluşturma
+                });
+                const qrTerminalPromise = qrcode.toString(qr, { 
+                    type: 'terminal', 
+                    small: true,
+                    errorCorrectionLevel: 'L'
+                });
+                
+                // Instance durumunu hemen güncelle
                 instance.status = 'qr_ready';
-
-                // Terminal'de QR kod göster
-                if (instance.isRecovered && instance.hasValidAuth) {
-                    console.log(`\n⚠️ Instance ${instanceId} için beklenmeyen QR kod oluşturuldu!`);
-                    console.log('🔄 Session geçersiz olabilir, yeniden authentication gerekiyor...\n');
-                } else if (instance.isRecovered) {
+                
+                // Terminal mesajını hemen göster
+                if (instance.isRecovered && !instance.hasValidAuth) {
                     console.log(`\n🔗 Recovered Instance ${instanceId} için QR Code:`);
-                    console.log('📱 WhatsApp uygulamanızla aşağıdaki QR kodu tarayın:\n');
+                } else if (instance.isRecovered) {
+                    console.log(`\n⚠️ Instance ${instanceId} için yeni QR kod oluşturuldu!`);
                 } else {
                     console.log(`\n🔗 QR Code for instance ${instanceId}:`);
-                    console.log('📱 WhatsApp uygulamanızla aşağıdaki QR kodu tarayın:\n');
                 }
+                console.log('📱 WhatsApp uygulamanızla aşağıdaki QR kodu tarayın:\n');
 
-                // QR kodu terminal'de göster
-                const qrTerminal = await qrcode.toString(qr, { type: 'terminal', small: true });
+                // QR kod işlemlerinin tamamlanmasını bekle
+                const [qrDataURL, qrTerminal] = await Promise.all([qrDataURLPromise, qrTerminalPromise]);
+                
+                instance.qr = qrDataURL;
+                
+                // Terminal'de QR kod göster
                 console.log(qrTerminal);
-
                 console.log(`\n✅ Instance ${instanceId} QR kodu hazır!`);
                 console.log('🔄 QR kod tarandıktan sonra bağlantı otomatik olarak kurulacak...\n');
 
                 logger.info(`QR code generated for instance ${instanceId}`);
 
-                // Emit QR code to specific instance room
-                this.io.to(`instance-${instanceId}`).emit('qr', {
-                    instanceId,
-                    qr: qrDataURL,
-                    timestamp: new Date(),
-                    isRecovered: instance.isRecovered || false
-                });
-
-                // Also emit to general room for monitoring
-                this.io.emit('instance_qr', {
-                    instanceId,
-                    qr: qrDataURL,
-                    timestamp: new Date(),
-                    isRecovered: instance.isRecovered || false
+                // Socket emit'leri paralel yap
+                const emitPromises = [
+                    // Emit QR code to specific instance room
+                    this.io.to(`instance-${instanceId}`).emit('qr', {
+                        instanceId,
+                        qr: qrDataURL,
+                        timestamp: new Date(),
+                        isRecovered: instance.isRecovered || false
+                    }),
+                    
+                    // Also emit to general room for monitoring
+                    this.io.emit('instance_qr', {
+                        instanceId,
+                        qr: qrDataURL,
+                        timestamp: new Date(),
+                        isRecovered: instance.isRecovered || false
+                    })
+                ];
+                
+                // Emit'leri beklemeden devam et (fire and forget)
+                Promise.all(emitPromises).catch(error => {
+                    logger.error(`Error emitting QR for instance ${instanceId}:`, error);
                 });
             } catch (error) {
                 logger.error(`Error generating QR for instance ${instanceId}:`, error);
             }
+        });
+
+        // Authentication başarılı olduğunda
+        client.on('authenticated', () => {
+            console.log(`\n🔐 Instance ${instanceId} authentication başarılı!`);
+            instance.hasValidAuth = true;
+            instance.skipQR = true;
+            instance.status = 'authenticated';
+            logger.info(`Instance ${instanceId} authenticated successfully`);
+        });
+
+        // Authentication başarısız olduğunda
+        client.on('auth_failure', (msg) => {
+            console.log(`\n❌ Instance ${instanceId} authentication başarısız: ${msg}`);
+            instance.hasValidAuth = false;
+            instance.skipQR = false;
+            instance.status = 'auth_failed';
+            logger.warn(`Instance ${instanceId} authentication failed: ${msg}`);
+            
+            // Emit authentication failure
+            this.io.to(`instance-${instanceId}`).emit('auth_failure', {
+                instanceId,
+                message: msg,
+                timestamp: new Date()
+            });
+        });
+
+        // Session kaybolduğunda
+        client.on('disconnected', (reason) => {
+            console.log(`\n🔌 Instance ${instanceId} bağlantısı kesildi: ${reason}`);
+            instance.hasValidAuth = false;
+            instance.skipQR = false;
+            instance.status = 'disconnected';
+            logger.warn(`Instance ${instanceId} disconnected: ${reason}`);
+            
+            // Keep-alive'ı durdur
+            this.stopKeepAlive(instanceId);
+            
+            // Emit disconnection
+            this.io.to(`instance-${instanceId}`).emit('disconnected', {
+                instanceId,
+                reason,
+                timestamp: new Date()
+            });
         });
 
         client.on('ready', () => {
@@ -372,6 +466,10 @@ class WhatsAppManager {
             instance.qr = null;
             instance.info = client.info;
             instance.lastActivity = new Date();
+            
+            // Ready olduğunda authentication kesinlikle başarılı demektir
+            instance.hasValidAuth = true;
+            instance.skipQR = true;
 
             // Terminal'de bağlantı başarılı mesajı
             if (instance.isRecovered && instance.hasValidAuth) {
@@ -408,6 +506,9 @@ class WhatsAppManager {
                 isRecovered: instance.isRecovered || false,
                 hasValidAuth: instance.hasValidAuth || false
             });
+
+            // Keep-alive mekanizması başlat
+            this.startKeepAlive(instanceId);
         });
 
         client.on('authenticated', () => {
@@ -476,7 +577,9 @@ class WhatsAppManager {
             });
         });
 
+        // Activity tracking - her mesajda lastActivity güncelle
         client.on('message', (message) => {
+            // Son aktivite zamanını güncelle (bağlantının aktif olduğunu gösterir)
             instance.lastActivity = new Date();
             
             this.io.to(`instance-${instanceId}`).emit('message', {
@@ -495,6 +598,7 @@ class WhatsAppManager {
         });
 
         client.on('message_create', (message) => {
+            // Giden mesajlarda da activity güncelle
             instance.lastActivity = new Date();
             
             this.io.to(`instance-${instanceId}`).emit('message_create', {
@@ -1112,12 +1216,84 @@ class WhatsAppManager {
                 return false;
             }
 
-            // Try to get client state
-            const state = await instance.client.getState();
+            // Try to get client state with timeout
+            const statePromise = instance.client.getState();
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Health check timeout')), 3000)
+            );
+            
+            const state = await Promise.race([statePromise, timeoutPromise]);
             return state === 'CONNECTED';
         } catch (error) {
             logger.warn(`Session health check failed for instance ${instanceId}:`, error.message);
             return false;
+        }
+    }
+
+    /**
+     * Start keep-alive mechanism for an instance
+     * @param {string} instanceId - Instance identifier
+     */
+    startKeepAlive(instanceId) {
+        const instance = this.instances.get(instanceId);
+        if (!instance) return;
+
+        // Mevcut keep-alive interval'ı temizle
+        if (instance.keepAliveInterval) {
+            clearInterval(instance.keepAliveInterval);
+        }
+
+        // Her 30 saniyede bir ping-pong yaparak bağlantıyı canlı tut
+        instance.keepAliveInterval = setInterval(async () => {
+            try {
+                if (instance.status === 'ready' && instance.client) {
+                    // Basit bir state kontrolü yaparak bağlantıyı test et
+                    await instance.client.getState();
+                    
+                    // Son aktivite zamanını güncelle
+                    instance.lastActivity = new Date();
+                    
+                    console.log(`💓 Instance ${instanceId} keep-alive - bağlantı aktif`);
+                }
+            } catch (error) {
+                console.log(`⚠️ Instance ${instanceId} keep-alive başarısız - bağlantı problemi olabilir`);
+                logger.warn(`Keep-alive failed for instance ${instanceId}:`, error.message);
+                
+                // Keep-alive başarısız olursa immediate health check tetikle
+                setTimeout(async () => {
+                    const isHealthy = await this.checkSessionHealth(instanceId);
+                    if (!isHealthy && instance.status === 'ready') {
+                        console.log(`🔄 Instance ${instanceId} keep-alive sonrası health check başarısız - reconnection başlatılıyor`);
+                        instance.status = 'disconnected';
+                        
+                        // Hemen reconnection başlat
+                        setTimeout(async () => {
+                            try {
+                                await this.attemptAutoReconnection(instanceId);
+                            } catch (reconnectError) {
+                                logger.error(`Keep-alive triggered reconnection failed for instance ${instanceId}:`, reconnectError);
+                            }
+                        }, 1000);
+                    }
+                }, 500);
+            }
+        }, 30000); // 30 saniye aralıklarla
+
+        console.log(`💓 Keep-alive başlatıldı: Instance ${instanceId} (30s interval)`);
+        logger.info(`Keep-alive started for instance ${instanceId}`);
+    }
+
+    /**
+     * Stop keep-alive mechanism for an instance
+     * @param {string} instanceId - Instance identifier
+     */
+    stopKeepAlive(instanceId) {
+        const instance = this.instances.get(instanceId);
+        if (instance && instance.keepAliveInterval) {
+            clearInterval(instance.keepAliveInterval);
+            instance.keepAliveInterval = null;
+            console.log(`💓 Keep-alive durduruldu: Instance ${instanceId}`);
+            logger.info(`Keep-alive stopped for instance ${instanceId}`);
         }
     }
 
@@ -1517,31 +1693,47 @@ class WhatsAppManager {
      * Start health monitoring for all instances
      */
     startHealthMonitoring() {
-        // Check every 30 seconds
+        // Check every 10 seconds - çok daha hızlı tespit
         this.healthCheckInterval = setInterval(async () => {
             for (const [instanceId, instance] of this.instances) {
                 if (instance.status === 'ready') {
-                    const isHealthy = await this.checkSessionHealth(instanceId);
-                    if (!isHealthy) {
-                        console.log(`⚠️ Instance ${instanceId} session sağlık kontrolü başarısız`);
-                        logger.warn(`Health check failed for instance ${instanceId}`);
+                    try {
+                        const isHealthy = await this.checkSessionHealth(instanceId);
+                        if (!isHealthy) {
+                            console.log(`⚠️ Instance ${instanceId} session sağlık kontrolü başarısız - hemen yeniden bağlanıyor`);
+                            logger.warn(`Health check failed for instance ${instanceId} - attempting immediate reconnection`);
 
-                        // Mark as disconnected
-                        instance.status = 'disconnected';
+                            // Mark as disconnected
+                            instance.status = 'disconnected';
 
-                        // Emit status change
-                        this.io.emit('instance_status_changed', {
-                            instanceId,
-                            status: 'disconnected',
-                            timestamp: new Date()
-                        });
+                            // Hemen reconnection başlat (60 saniye bekleme)
+                            setTimeout(async () => {
+                                try {
+                                    await this.attemptAutoReconnection(instanceId);
+                                } catch (error) {
+                                    logger.error(`Immediate reconnection failed for instance ${instanceId}:`, error);
+                                }
+                            }, 1000); // 1 saniye sonra başlat
+
+                            // Emit status change
+                            this.io.emit('instance_status_changed', {
+                                instanceId,
+                                status: 'disconnected',
+                                timestamp: new Date()
+                            });
+                        } else {
+                            // Healthy ise lastActivity güncelle
+                            instance.lastActivity = new Date();
+                        }
+                    } catch (error) {
+                        logger.error(`Health monitoring error for instance ${instanceId}:`, error);
                     }
                 }
             }
-        }, 30000); // 30 seconds
+        }, 10000); // 10 saniye - 3x daha hızlı
 
-        console.log('🔍 Session health monitoring başlatıldı (30 saniye aralıklarla)');
-        logger.info('Session health monitoring started');
+        console.log('🔍 Session health monitoring başlatıldı (10 saniye aralıklarla - hızlandırıldı)');
+        logger.info('Session health monitoring started with 10s interval');
     }
 
     /**
@@ -1560,11 +1752,11 @@ class WhatsAppManager {
      * Start auto-reconnection monitoring
      */
     startAutoReconnection() {
-        // Check every 60 seconds for disconnected instances
+        // Check every 15 seconds for disconnected instances - 4x daha hızlı
         this.reconnectionInterval = setInterval(async () => {
             for (const [instanceId, instance] of this.instances) {
-                if (instance.status === 'disconnected' && instance.hasValidAuth) {
-                    console.log(`🔄 Instance ${instanceId} otomatik yeniden bağlanma başlatılıyor...`);
+                if (instance.status === 'disconnected' && instance.hasValidAuth && !instance.reconnecting) {
+                    console.log(`🔄 Instance ${instanceId} otomatik yeniden bağlanma başlatılıyor (hızlandırılmış)...`);
                     logger.info(`Auto-reconnection started for instance ${instanceId}`);
 
                     try {
@@ -1574,10 +1766,10 @@ class WhatsAppManager {
                     }
                 }
             }
-        }, 60000); // 60 seconds
+        }, 15000); // 15 saniye - 4x daha hızlı
 
-        console.log('🔄 Otomatik yeniden bağlanma sistemi başlatıldı (60 saniye aralıklarla)');
-        logger.info('Auto-reconnection monitoring started');
+        console.log('🔄 Otomatik yeniden bağlanma sistemi başlatıldı (15 saniye aralıklarla - hızlandırıldı)');
+        logger.info('Auto-reconnection monitoring started with 15s interval');
     }
 
     /**
@@ -1629,13 +1821,14 @@ class WhatsAppManager {
             }
 
             // Try to reinitialize the instance
+            console.log(`🔧 Instance ${instanceId} reinitialize çağrılıyor...`);
             await this.reinitializeInstance(instanceId);
 
             // Reset reconnect attempts on success
             instance.reconnectAttempts = 0;
             instance.reconnecting = false;
 
-            console.log(`✅ Instance ${instanceId} başarıyla yeniden bağlandı`);
+            console.log(`✅ Instance ${instanceId} başarıyla yeniden bağlandı!`);
             logger.info(`Auto-reconnection successful for instance ${instanceId}`);
 
         } catch (error) {
@@ -1643,10 +1836,15 @@ class WhatsAppManager {
             console.log(`❌ Instance ${instanceId} yeniden bağlanma başarısız: ${error.message}`);
             logger.error(`Auto-reconnection failed for instance ${instanceId}:`, error);
 
-            // Wait before next attempt
+            // Hata durumunda hemen tekrar denemek yerine biraz bekle
+            console.log(`⏳ Instance ${instanceId} ${this.reconnectDelay/1000} saniye sonra tekrar denenecek...`);
+            
             setTimeout(() => {
                 if (instance.reconnectAttempts < this.maxReconnectAttempts) {
+                    console.log(`🔄 Instance ${instanceId} scheduled reconnection başlatılıyor...`);
                     this.attemptAutoReconnection(instanceId);
+                } else {
+                    console.log(`🛑 Instance ${instanceId} maksimum deneme sayısına ulaşıldı, durduruldu`);
                 }
             }, this.reconnectDelay);
         }
@@ -1663,23 +1861,29 @@ class WhatsAppManager {
         }
 
         try {
+            console.log(`🔄 Instance ${instanceId} reinitialize başlıyor...`);
+            
             // Destroy existing client if it exists
             if (instance.client) {
                 try {
+                    console.log(`🗑️ Instance ${instanceId} eski client destroy ediliyor...`);
                     await instance.client.destroy();
+                    console.log(`✅ Instance ${instanceId} eski client destroy edildi`);
                 } catch (error) {
-                    // Ignore destroy errors
+                    console.log(`⚠️ Instance ${instanceId} destroy hatası (görmezden gelindi): ${error.message}`);
                 }
             }
 
-            // Wait a bit
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Minimal wait for cleanup - çok daha hızlı
+            await new Promise(resolve => setTimeout(resolve, 500));
 
+            console.log(`🚀 Instance ${instanceId} yeni client oluşturuluyor...`);
+            
             // Create new client
             const client = new Client({
                 authStrategy: new LocalAuth({
                     clientId: instanceId,
-                    dataPath: this.sessionsPath
+                    dataPath: path.join(this.sessionsPath, instanceId)
                 }),
                 puppeteer: {
                     headless: true,
@@ -1691,7 +1895,16 @@ class WhatsAppManager {
                         '--no-first-run',
                         '--no-zygote',
                         '--single-process',
-                        '--disable-gpu'
+                        '--disable-gpu',
+                        '--disable-web-security',
+                        '--disable-background-networking',
+                        '--disable-background-timer-throttling',
+                        '--disable-renderer-backgrounding',
+                        '--disable-backgrounding-occluded-windows',
+                        '--disable-ipc-flooding-protection',
+                        '--run-all-compositor-stages-before-draw',
+                        '--disable-extensions',
+                        '--aggressive-cache-discard'
                     ]
                 }
             });
@@ -1701,15 +1914,28 @@ class WhatsAppManager {
             instance.status = 'initializing';
             instance.qr = null;
 
+            console.log(`🎧 Instance ${instanceId} event listener'ları kuruluyor...`);
             // Setup event listeners
-            this.setupClientEvents(client, instanceId);
+            this.setupClientEvents(instanceId, client);
 
-            // Initialize client
-            await client.initialize();
-
+            console.log(`⏳ Instance ${instanceId} initialize başlıyor (timeout ile)...`);
+            
+            // Initialize client with timeout protection
+            const initializePromise = client.initialize();
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Initialize timeout after 120 seconds')), 120000)
+            );
+            
+            await Promise.race([initializePromise, timeoutPromise]);
+            
+            console.log(`✅ Instance ${instanceId} initialize başarılı!`);
             return instance;
+            
         } catch (error) {
+            console.log(`❌ Instance ${instanceId} reinitialize hatası: ${error.message}`);
             instance.status = 'disconnected';
+            instance.reconnecting = false; // Hata durumunda flag'i temizle
+            logger.error(`Reinitialize failed for instance ${instanceId}:`, error);
             throw error;
         }
     }
@@ -1724,6 +1950,9 @@ class WhatsAppManager {
         // Destroy all instances
         for (const [instanceId, instance] of this.instances) {
             try {
+                // Keep-alive'ı durdur
+                this.stopKeepAlive(instanceId);
+                
                 if (instance.client) {
                     await instance.client.destroy();
                 }
